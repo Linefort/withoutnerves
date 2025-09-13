@@ -134,46 +134,50 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Обработчик для запуска по любому взаимодействию
+        // обработчик для запуска по любому взаимодействию
         function startExperience() {
             if (started) return;
             
             started = true;
             loadMessage.textContent = "Starting...";
             
-            // Запускаем видео
+            // запускаем видео
             videoBackground.play().catch(e => {
                 console.log("Ошибка воспроизведения видео: ", e);
             });
             
-            // Запускаем аудио с 51 секунды
+            // запускаем аудио с 51 секунды
             playAudioFrom51();
             
-            // Скрываем сообщение через 2 секунды
+            // скрываем сообщение через 2 секунды
             setTimeout(() => {
                 loadMessage.style.display = 'none';
             }, 2000);
             
-            // Удаляем обработчики событий после первого запуска
+            // удаляем обработчики событий после первого запуска
             document.removeEventListener('click', startExperience);
             document.removeEventListener('keydown', startExperience);
         }
 
-        // Функция для запуска аудио с 51 секунды
+        // запуск с 51 секунды
         function playAudioFrom51() {
-            // Устанавливаем время начала воспроизведения на 51 секунду
+            // громкость
+            backgroundMusic.volume = 0.4;
+            
+            // начало с 51 секунды
             backgroundMusic.currentTime = 51;
             
-            // Включаем зацикливание
+            // зацикливание
             backgroundMusic.loop = true;
             
-            // Пытаемся воспроизвести аудио
+            // пытаемся воспроизвести аудио
             backgroundMusic.play().catch(e => {
                 console.log("Ошибка воспроизведения аудио: ", e);
                 
-                // Если произошла ошибка, возможно, аудио еще не загружено достаточно
-                // Ждем, пока загрузится достаточно данных, и пробуем снова
+                // если произошла ошибка, возможно, аудио еще не загружено достаточно
+                // ждем, пока загрузится достаточно данных, и пробуем снова
                 backgroundMusic.addEventListener('canplaythrough', function() {
+                    backgroundMusic.volume = 0.4;
                     backgroundMusic.currentTime = 51;
                     backgroundMusic.play().catch(e => {
                         console.log("Ошибка воспроизведения аудио после загрузки: ", e);
@@ -183,7 +187,7 @@
             });
         }
 
-        // Добавляем обработчики событий
+        // обработчики собыций
         document.addEventListener('click', startExperience);
         document.addEventListener('keydown', startExperience);
 
@@ -313,10 +317,10 @@
             console.log('Аудио не загрузилось. Убедитесь, что ссылка правильная и файл существует.');
         });
 
-        // Предзагрузка аудио
+        // предзагрузка аудио
         backgroundMusic.preload = "auto";
         
-        // Инициализация
+        // инициализация
         window.addEventListener('load', function() {
             init();
             animate();
