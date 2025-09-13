@@ -95,7 +95,7 @@
 <body>
     <!-- контейнер для видео -->
     <div id="video-container">
-        <video id="video-background" loop playsinline>
+        <video id="video-background" loop muted playsinline>
             <!-- ссылка на ваше видео -->
             <source src="https://linefort.github.io/withoutnerves/background.mp4" type="video/mp4">
             Ваш браузер не поддерживает видео.
@@ -109,8 +109,8 @@
         <div class="subtitle">movement aka 2017?</div>
     </div>
 
-    <!-- для аудио -->
-    <audio id="background-music" loop>
+    <!-- для аудио - Linkin Park From The Inside -->
+    <audio id="background-music">
         <source src="https://raw.githubusercontent.com/Linefort/withoutnerves/main/sybau.mp3" type="audio/mp3">
     </audio>
     
@@ -146,19 +146,38 @@
                 console.log("Ошибка воспроизведения видео: ", e);
             });
             
-            // Запускаем аудио
-            backgroundMusic.play().catch(e => {
-                console.log("Ошибка воспроизведения аудио: ", e);
-            });
+            // запускаем аудио с 51 секунды
+            playAudioFrom51();
             
-            // Скрываем сообщение через 2 секунды
+            // скрываем сообщение через 2 секунды
             setTimeout(() => {
                 loadMessage.style.display = 'none';
             }, 2000);
             
-            // Удаляем обработчики событий после первого запуска
+            // удаляем обработчики событий после первого запуска
             document.removeEventListener('click', startExperience);
             document.removeEventListener('keydown', startExperience);
+        }
+
+        // функция для запуска аудио с 51 секунды
+        function playAudioFrom51() {
+            // начало 51 и цикл
+            backgroundMusic.currentTime = 51;
+            backgroundMusic.loop = true;
+            
+            // Пытаемся воспроизвести аудио
+            backgroundMusic.play().catch(e => {
+                console.log("Ошибка воспроизведения аудио: ", e);
+                
+                // если произошла ошибка, возможно, аудио еще не загружено достаточно
+                // ждем, пока загрузится достаточно данных, и пробуем снова
+                backgroundMusic.addEventListener('canplaythrough', function() {
+                    backgroundMusic.currentTime = 51;
+                    backgroundMusic.play().catch(e => {
+                        console.log("Ошибка воспроизведения аудио после загрузки: ", e);
+                    });
+                }, { once: true });
+            });
         }
 
         // Добавляем обработчики событий
@@ -291,6 +310,9 @@
             console.log('Аудио не загрузилось. Убедитесь, что путь правильный и файл существует.');
         });
 
+        // Предзагрузка аудио
+        backgroundMusic.preload = "auto";
+        
         // Инициализация
         window.addEventListener('load', function() {
             init();
