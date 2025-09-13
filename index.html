@@ -162,7 +162,7 @@
         // запуск с 51 секунды
         function playAudioFrom51() {
             // громкость
-            backgroundMusic.volume = 0.4;
+            backgroundMusic.volume = 0.2;
             
             // начало с 51 секунды
             backgroundMusic.currentTime = 51;
@@ -177,7 +177,7 @@
                 // если произошла ошибка, возможно, аудио еще не загружено достаточно
                 // ждем, пока загрузится достаточно данных, и пробуем снова
                 backgroundMusic.addEventListener('canplaythrough', function() {
-                    backgroundMusic.volume = 0.4;
+                    backgroundMusic.volume = 0.2;
                     backgroundMusic.currentTime = 51;
                     backgroundMusic.play().catch(e => {
                         console.log("Ошибка воспроизведения аудио после загрузки: ", e);
