@@ -13,17 +13,27 @@
             color: #ffffff;
         }
         
-        #video-background {
+        #video-container {
             position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        #video-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
-            z-index: -2;
-            opacity: 0.3;
-            filter: brightness(0.4);
+            transform: translate(-50%, -50%);
+            opacity: 0.7; /* больше прозрачность а то видос нихуя не было видно */
+            filter: brightness(0.5) contrast(1.1); /* меньше затемнения */
         }
         
         canvas {
@@ -75,6 +85,15 @@
             border: 1px solid #3498db;
         }
         
+        .load-message {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: #bdc3c7;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
         @keyframes glow {
             from {
                 text-shadow: 0 0 10px #3498db, 0 0 20px #2980b9;
@@ -86,26 +105,33 @@
     </style>
 </head>
 <body>
-    <!-- Видеофон с GitHub -->
-    <video id="video-background" autoplay muted loop playsinline>
-        <source src="https://github.com/Linefort/withoutnerves/blob/main/background.mp4" type="video/mp4">
-        Ваш браузер не поддерживает видео.
-    </video>
+    <!-- контейнер для видео -->
+    <div id="video-container">
+        <video id="video-background" autoplay muted loop playsinline>
+            <!-- ссылка на ваше видео -->
+            <source src="https://raw.githubusercontent.com/Linefort/withoutnerves/main/background.mp4" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+        </video>
+    </div>
     
     <canvas id="canvas"></canvas>
     
     <div class="center-text">
-        <h1>owned by @meffday</h1>
-        <div class="subtitle">cyber systems</div>
+        <h1>kurwa by @meffday</h1>
+        <div class="subtitle">movement aka 2017?</div>
     </div>
 
-    <!-- Аудио элемент -->
+    <!-- для аудио -->
     <audio id="background-music" loop>
-        <source src="https://github.com/Linefort/withoutnerves/blob/main/background-music.mp3" type="audio/mp3">
+        <source src="https://raw.githubusercontent.com/your-username/your-repo/main/background-music.mp3" type="audio/mp3">
+        <source src="https://raw.githubusercontent.com/your-username/your-repo/main/background-music.ogg" type="audio/ogg">
     </audio>
     
-    <!-- Кнопка управления аудио -->
+    <!-- кнопка аудио -->
     <div class="audio-control" id="audio-toggle">🔇</div>
+    
+    <!-- сообщение о загрузке -->
+    <div class="load-message" id="load-message">Загрузка видео...</div>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -113,10 +139,12 @@
         let points = [];
         const mouse = { x: null, y: null, radius: 150 };
         
-        // Элементы для видео и аудио
+        // элементы для видео и аудио
         const videoBackground = document.getElementById('video-background');
+        const videoContainer = document.getElementById('video-container');
         const backgroundMusic = document.getElementById('background-music');
         const audioToggle = document.getElementById('audio-toggle');
+        const loadMessage = document.getElementById('load-message');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -132,10 +160,12 @@
             init();
         });
         
-        // Управление аудио
+        // управление аудио
         audioToggle.addEventListener('click', function() {
             if (backgroundMusic.paused) {
-                backgroundMusic.play();
+                backgroundMusic.play().catch(e => {
+                    console.log("Автовоспроизведение аудио заблокировано: ", e);
+                });
                 audioToggle.textContent = '🔊';
             } else {
                 backgroundMusic.pause();
@@ -165,7 +195,7 @@
                     this.speedY = -this.speedY;
                 }
                 
-                // Взаимодействие с курсором
+                // взаимодействие с курсором
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -204,7 +234,7 @@
                 points[i].update();
                 points[i].draw();
                 
-                // Соединение точек между собой
+                // соединение точек между собой
                 for (let j = i + 1; j < points.length; j++) {
                     const dx = points[i].x - points[j].x;
                     const dy = points[i].y - points[j].y;
@@ -221,7 +251,7 @@
                     }
                 }
                 
-                // Соединение точек с курсором
+                // соединение точек с курсором
                 if (mouse.x !== null && mouse.y !== null) {
                     const dx = points[i].x - mouse.x;
                     const dy = points[i].y - mouse.y;
@@ -242,16 +272,45 @@
             requestAnimationFrame(animate);
         }
 
-        // Попытка загрузить видео, если возникает ошибка - скрываем видео элемент
-        videoBackground.addEventListener('error', function() {
-            videoBackground.style.display = 'none';
-            console.log('Видео не загрузилось. Убедитесь, что путь правильный и файл существует.');
+        // обработчики для видео
+        videoBackground.addEventListener('loadeddata', function() {
+            loadMessage.textContent = "Видео загружено";
+            setTimeout(() => {
+                loadMessage.style.display = 'none';
+            }, 2000);
         });
         
-        // То же для аудио
+        videoBackground.addEventListener('error', function() {
+            loadMessage.textContent = "Ошибка загрузки видео";
+            videoContainer.style.display = 'none';
+        });
+        
+        videoBackground.addEventListener('canplay', function() {
+            // автозапуск видео
+            videoBackground.play().catch(e => {
+                console.log("Автовоспроизведение видео заблокировано: ", e);
+                loadMessage.textContent = "Нажмите для запуска видео";
+                videoContainer.style.cursor = 'pointer';
+                
+                videoContainer.addEventListener('click', function() {
+                    videoBackground.play();
+                    loadMessage.style.display = 'none';
+                    videoContainer.style.cursor = 'default';
+                }, { once: true });
+            });
+        });
+        
+        // для аудио
         backgroundMusic.addEventListener('error', function() {
             audioToggle.style.display = 'none';
             console.log('Аудио не загрузилось. Убедитесь, что путь правильный и файл существует.');
+        });
+
+        // для видео
+        window.addEventListener('load', function() {
+            videoBackground.play().catch(e => {
+                console.log("Автовоспроизведение видео заблокировано при загрузке: ", e);
+            });
         });
 
         init();
