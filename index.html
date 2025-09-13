@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owned by @meffday</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0a0a0a;
+            font-family: 'Arial', sans-serif;
+            color: #ffffff;
+        }
+        
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            opacity: 0.3;
+            filter: brightness(0.4);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 0;
+            text-shadow: 0 0 15px #3498db, 0 0 25px #3498db;
+            animation: glow 2s ease-in-out infinite alternate;
+            color: #ecf0f1;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.7;
+            margin-top: 10px;
+            color: #bdc3c7;
+        }
+        
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            border: 1px solid #3498db;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #3498db, 0 0 20px #2980b9;
+            }
+            to {
+                text-shadow: 0 0 20px #3498db, 0 0 40px #2980b9, 0 0 60px #21618c;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Видеофон с GitHub -->
+    <video id="video-background" autoplay muted loop playsinline>
+        <source src="https://github.com/user/repo/raw/main/background.mp4" type="video/mp4">
+        Ваш браузер не поддерживает видео.
+    </video>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div class="center-text">
+        <h1>owned by @meffday</h1>
+        <div class="subtitle">cyber systems</div>
+    </div>
+
+    <!-- Аудио элемент -->
+    <audio id="background-music" loop>
+        <source src="https://github.com/user/repo/raw/main/background-music.mp3" type="audio/mp3">
+    </audio>
+    
+    <!-- Кнопка управления аудио -->
+    <div class="audio-control" id="audio-toggle">🔇</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+        const mouse = { x: null, y: null, radius: 150 };
+        
+        // Элементы для видео и аудио
+        const videoBackground = document.getElementById('video-background');
+        const backgroundMusic = document.getElementById('background-music');
+        const audioToggle = document.getElementById('audio-toggle');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        });
+        
+        // Управление аудио
+        audioToggle.addEventListener('click', function() {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play();
+                audioToggle.textContent = '🔊';
+            } else {
+                backgroundMusic.pause();
+                audioToggle.textContent = '🔇';
+            }
+        });
+
+        class Point {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `rgba(52, 152, 219, ${Math.random() * 0.5 + 0.3})`;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.x > canvas.width || this.x < 0) {
+                    this.speedX = -this.speedX;
+                }
+                
+                if (this.y > canvas.height || this.y < 0) {
+                    this.speedY = -this.speedY;
+                }
+                
+                // Взаимодействие с курсором
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < mouse.radius) {
+                    const force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= dx * force * 0.1;
+                    this.y -= dy * force * 0.1;
+                }
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            points = [];
+            const numberOfPoints = (canvas.width * canvas.height) / 8000;
+            
+            for (let i = 0; i < numberOfPoints; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                points.push(new Point(x, y));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < points.length; i++) {
+                points[i].update();
+                points[i].draw();
+                
+                // Соединение точек между собой
+                for (let j = i + 1; j < points.length; j++) {
+                    const dx = points[i].x - points[j].x;
+                    const dy = points[i].y - points[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(52, 152, 219, ${1 - distance/120})`;
+                        ctx.lineWidth = 0.7;
+                        ctx.moveTo(points[i].x, points[i].y);
+                        ctx.lineTo(points[j].x, points[j].y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+                
+                // Соединение точек с курсором
+                if (mouse.x !== null && mouse.y !== null) {
+                    const dx = points[i].x - mouse.x;
+                    const dy = points[i].y - mouse.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 180) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(149, 165, 166, ${1 - distance/180})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.moveTo(points[i].x, points[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Попытка загрузить видео, если возникает ошибка - скрываем видео элемент
+        videoBackground.addEventListener('error', function() {
+            videoBackground.style.display = 'none';
+            console.log('Видео не загрузилось. Убедитесь, что путь правильный и файл существует.');
+        });
+        
+        // То же для аудио
+        backgroundMusic.addEventListener('error', function() {
+            audioToggle.style.display = 'none';
+            console.log('Аудио не загрузилось. Убедитесь, что путь правильный и файл существует.');
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
