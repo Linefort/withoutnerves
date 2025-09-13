@@ -11,6 +11,7 @@
             background-color: #0a0a0a;
             font-family: 'Arial', sans-serif;
             color: #ffffff;
+            cursor: default;
         }
         
         #video-container {
@@ -32,8 +33,8 @@
             width: auto;
             height: auto;
             transform: translate(-50%, -50%);
-            opacity: 0.7; /* больше прозрачность а то видос нихуя не было видно */
-            filter: brightness(0.5) contrast(1.1); /* меньше затемнения */
+            opacity: 0.7;
+            filter: brightness(0.5) contrast(1.1);
         }
         
         canvas {
@@ -69,22 +70,6 @@
             color: #bdc3c7;
         }
         
-        .audio-control {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 10;
-            border: 1px solid #3498db;
-        }
-        
         .load-message {
             position: fixed;
             bottom: 20px;
@@ -92,6 +77,9 @@
             color: #bdc3c7;
             font-size: 12px;
             z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
         }
         
         @keyframes glow {
@@ -107,7 +95,7 @@
 <body>
     <!-- контейнер для видео -->
     <div id="video-container">
-        <video id="video-background" autoplay loop playsinline>
+        <video id="video-background" loop playsinline>
             <!-- ссылка на ваше видео -->
             <source src="https://linefort.github.io/withoutnerves/background.mp4" type="video/mp4">
             Ваш браузер не поддерживает видео.
@@ -123,14 +111,11 @@
 
     <!-- для аудио -->
     <audio id="background-music" loop>
-          <source src="https://raw.githubusercontent.com/Linefort/withoutnerves/main/sybau.mp3" type="audio/mp3">
+        <source src="https://raw.githubusercontent.com/Linefort/withoutnerves/main/sybau.mp3" type="audio/mp3">
     </audio>
     
-    <!-- кнопка аудио -->
-    <div class="audio-control" id="audio-toggle">🔇</div>
-    
     <!-- сообщение о загрузке -->
-    <div class="load-message" id="load-message">loading bro?</div>
+    <div class="load-message" id="load-message">Click or press any key to start</div>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -142,11 +127,43 @@
         const videoBackground = document.getElementById('video-background');
         const videoContainer = document.getElementById('video-container');
         const backgroundMusic = document.getElementById('background-music');
-        const audioToggle = document.getElementById('audio-toggle');
         const loadMessage = document.getElementById('load-message');
+
+        let started = false;
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+
+        // Обработчик для запуска по любому взаимодействию
+        function startExperience() {
+            if (started) return;
+            
+            started = true;
+            loadMessage.textContent = "Starting...";
+            
+            // Запускаем видео
+            videoBackground.play().catch(e => {
+                console.log("Ошибка воспроизведения видео: ", e);
+            });
+            
+            // Запускаем аудио
+            backgroundMusic.play().catch(e => {
+                console.log("Ошибка воспроизведения аудио: ", e);
+            });
+            
+            // Скрываем сообщение через 2 секунды
+            setTimeout(() => {
+                loadMessage.style.display = 'none';
+            }, 2000);
+            
+            // Удаляем обработчики событий после первого запуска
+            document.removeEventListener('click', startExperience);
+            document.removeEventListener('keydown', startExperience);
+        }
+
+        // Добавляем обработчики событий
+        document.addEventListener('click', startExperience);
+        document.addEventListener('keydown', startExperience);
 
         window.addEventListener('mousemove', function(event) {
             mouse.x = event.x;
@@ -157,19 +174,6 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             init();
-        });
-        
-        // управление аудио
-        audioToggle.addEventListener('click', function() {
-            if (backgroundMusic.paused) {
-                backgroundMusic.play().catch(e => {
-                    console.log("Автовоспроизведение аудио заблокировано: ", e);
-                });
-                audioToggle.textContent = '🔊';
-            } else {
-                backgroundMusic.pause();
-                audioToggle.textContent = '🔇';
-            }
         });
 
         class Point {
@@ -273,47 +277,25 @@
 
         // обработчики для видео
         videoBackground.addEventListener('loadeddata', function() {
-            loadMessage.textContent = "loaded";
-            setTimeout(() => {
-                loadMessage.style.display = 'none';
-            }, 2000);
+            console.log("Видео загружено");
         });
         
         videoBackground.addEventListener('error', function() {
-            loadMessage.textContent = "broken pipe";
+            loadMessage.textContent = "Ошибка загрузки видео";
             videoContainer.style.display = 'none';
-        });
-        
-        videoBackground.addEventListener('canplay', function() {
-            // автозапуск видео
-            videoBackground.play().catch(e => {
-                console.log("autoplay blocked: ", e);
-                loadMessage.textContent = "just start";
-                videoContainer.style.cursor = 'pointer';
-                
-                videoContainer.addEventListener('click', function() {
-                    videoBackground.play();
-                    loadMessage.style.display = 'none';
-                    videoContainer.style.cursor = 'default';
-                }, { once: true });
-            });
         });
         
         // для аудио
         backgroundMusic.addEventListener('error', function() {
-            audioToggle.style.display = 'none';
+            loadMessage.textContent = "Ошибка загрузки аудио";
             console.log('Аудио не загрузилось. Убедитесь, что путь правильный и файл существует.');
         });
 
-        // для видео
+        // Инициализация
         window.addEventListener('load', function() {
-            videoBackground.play().catch(e => {
-                console.log("Автовоспроизведение видео заблокировано при загрузке: ", e);
-            });
+            init();
+            animate();
         });
-
-        init();
-        animate();
     </script>
 </body>
 </html>
