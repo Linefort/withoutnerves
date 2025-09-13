@@ -273,22 +273,22 @@
 
         // обработчики для видео
         videoBackground.addEventListener('loadeddata', function() {
-            loadMessage.textContent = "Видео загружено";
+            loadMessage.textContent = "loaded";
             setTimeout(() => {
                 loadMessage.style.display = 'none';
             }, 2000);
         });
         
         videoBackground.addEventListener('error', function() {
-            loadMessage.textContent = "Ошибка загрузки видео";
+            loadMessage.textContent = "broken pipe";
             videoContainer.style.display = 'none';
         });
         
         videoBackground.addEventListener('canplay', function() {
             // автозапуск видео
             videoBackground.play().catch(e => {
-                console.log("Автовоспроизведение видео заблокировано: ", e);
-                loadMessage.textContent = "Нажмите для запуска видео";
+                console.log("autoplay blocked: ", e);
+                loadMessage.textContent = "just start";
                 videoContainer.style.cursor = 'pointer';
                 
                 videoContainer.addEventListener('click', function() {
